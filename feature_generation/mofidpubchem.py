@@ -5,6 +5,7 @@ from mofid.run_mofid import cif2mofid
 from rdkit.Chem.Descriptors import *
 import urllib.parse
 import requests
+import re
 
 PATHNAME = os.path.abspath('.') + '/'
 
@@ -14,6 +15,7 @@ def main(folder):
     featurization_list = []
     iter = 0
     for filename in os.listdir(folder + "cifs/"):
+        response = ""
         try:
             featurization = {}
             featurization["name"] = filename.split(".")[0]
@@ -26,7 +28,7 @@ def main(folder):
             smiles = mofid["smiles_linkers"][0].replace("O-", "OH")
             url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/{urllib.parse.quote(smiles)}/record/JSON"
             response = requests.get(url).json()
-            
+
             blocklist = ["Canonicalized", "IUPAC Name", "InChI", "Molecular Formula"]
             props = response["PC_Compounds"][0]["props"]
             for prop in props:
@@ -48,6 +50,71 @@ def main(folder):
             counts = response["PC_Compounds"][0]["count"] if "count" in response["PC_Compounds"][0] else {}
             for count in counts:
                 featurization[count] = counts[count]
+            
+            cid = ""
+            try:
+                cid = response["PC_Compounds"][0]["id"]["id"]["cid"]
+            except:
+                featurization_list.append(featurization)
+                continue
+
+            exp_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/{cid}/JSON?heading=Experimental+Properties"
+            exp_response = requests.get(exp_url).json()
+
+            if exp_response.get("Record") is None:
+                featurization_list.append(featurization)
+                continue
+
+            exp_props = exp_response["Record"]["Section"][0]["Section"][0]["Section"]
+            
+            for prop in exp_props:
+                for temp_prop in ["Melting Point", "Boiling Point", "Flash Point"]:
+                    if prop["TOCHeading"] == temp_prop:
+                        t_sum = 0
+                        t_count = 0
+                        for datum in prop["Information"]:
+                            try:
+                                if datum["Value"].get("StringWithMarkup") is None:
+                                    continue
+                                t_string = re.sub(r"\s+", "", datum["Value"]["StringWithMarkup"][0]["String"])
+                                if re.match(r"[0-9.]*", t_string[:t_string.find("°")]):
+                                    if "C" == t_string[t_string.find("°") + 1]:
+                                        t_sum += float(t_string[:t_string.find("°")])
+                                        t_count += 1
+                                    elif "F" == t_string[t_string.find("°") + 1]:
+                                        t_sum += (float(t_string[:t_string.find("°")]) - 32) * 5 / 9
+                                        t_count += 1
+                            except:
+                                continue
+                        featurization[temp_prop.replace(" ", "-")] = t_sum / t_count if t_count > 0 else 0
+
+                if prop["TOCHeading"] == "Density":
+                    denstiy_sum = 0
+                    density_count = 0
+                    for datum in prop["Information"]:
+                        try:
+                            if datum["Value"].get("StringWithMarkup") is None:
+                                continue
+                            t_string = re.sub(r"\s+", "", datum["Value"]["StringWithMarkup"][0]["String"])
+                            if re.match(r"[0-9.]*", t_string[:t_string.find("g/cm")]) or re.match(r"[0-9.]*", t_string):
+                                denstiy_sum += float(t_string[:t_string.find("g/cm")]) if "g/cm" in t_string else float(t_string)
+                        except:
+                            continue
+                    featurization["Density"] = denstiy_sum / density_count if density_count > 0 else 0
+
+                if prop["TOCHeading"] == "Dissociation Constants":
+                    diss_sum = 0
+                    diss_count = 0
+                    for datum in prop["Information"]:
+                        try:
+                            if datum["Value"].get("StringWithMarkup") is None:
+                                continue
+                            t_string = re.sub(r"\s+", "", datum["Value"]["StringWithMarkup"][0]["String"])
+                            if re.match(r"[0-9.]*", t_string):
+                                denstiy_sum += float(t_string)
+                        except:
+                            continue
+                    featurization["Dissociation Constants"] = diss_sum / diss_count if diss_count > 0 else 0
 
             featurization_list.append(featurization)
         except:
