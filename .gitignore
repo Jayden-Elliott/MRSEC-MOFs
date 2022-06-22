@@ -2,3 +2,6 @@ data/
 Output/
 packages/
 kulik_model/
+core_database/
+**/.DS_Store
+__pycache__/

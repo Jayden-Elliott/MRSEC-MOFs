@@ -26,23 +26,33 @@ index = depth
 
 
 def main(folder):
+    print("Generating RAC features...")
+    if not os.path.exists(folder + "primitives/"):
+        os.mkdir(folder + "primitives/")
+    if not os.path.exists(folder + "xyz/"):
+        os.mkdir(folder + "xyz/")
+    
     featurization_list = []
-    for filename in os.listdir(folder + 'cifs/'):
+    iter = 0
+    for filename in os.listdir(folder + "cifs/"):
         try:
-            get_primitive(folder + 'cifs/' + filename,
-                          folder + 'primitives/' + filename)
+            get_primitive(folder + "cifs/" + filename,
+                            folder + "primitives/" + filename)
             # depth = 3
-            full_names, full_descriptors = get_MOF_descriptors(
-                folder + 'primitives/' + filename, 3, path=folder, xyzpath=folder + 'xyz/' + filename.replace('cif', 'xyz'))
-            full_names.append('filename')
-            full_descriptors.append(filename)
+            full_names, full_descriptors = get_MOF_descriptors(folder + "primitives/" + filename, 3, path=folder, xyzpath=folder + "xyz/" + filename.replace("cif", "xyz"))
+            full_names.append("name")
+            full_descriptors.append(filename.split(".")[0])
             featurization = dict(zip(full_names, full_descriptors))
             featurization_list.append(featurization)
         except:
             continue
+        iter += 1
+        print(str(iter))
     df = pd.DataFrame(featurization_list)
-    df = df.sort_values(by=['filename'])
-    df.to_csv(folder + 'rac_featurization.csv', index=False)
+    names = df.pop("name")
+    df.insert(0, "name", names)
+    df.to_csv(folder + "rac_features.csv", index=False)
+    return df.sort_values(by=["name"])
 
 
 if __name__ == '__main__':

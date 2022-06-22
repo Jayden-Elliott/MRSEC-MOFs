@@ -2,19 +2,34 @@ import sys
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_absolute_error
+df = pd.read_csv("stats.csv")
 
-data = pd.read_csv(sys.argv[1])
-data = data.values
-actual = data[:, 0].tolist()
-predicted = data[:, 1].tolist()
+r2 = dict(zip(df.name, df.test_r2_score))
+print(r2)
+names = list(r2.keys())
+values = list(r2.values())
+plt.bar(range(len(r2)), values, align='center', tick_label=names)
+plt.xticks(rotation=90)
+ax = plt.gca()
+ax.set_ylim([-1, 1])
+plt.xlabel("Regression Model")
+plt.ylabel("R² Score")
+plt.tight_layout()
+plt.gca().set_aspect(16/2)
+plt.savefig("r2.png")
+plt.show()
 
-print("R2: {}".format(r2_score(actual, predicted)))
-print("MAE: {}".format(mean_absolute_error(actual, predicted)))
-
-plt.scatter(actual, predicted)
-plt.plot([0, 800], [0, 800], color='red')
-plt.xlabel('Actual')
-plt.ylabel('Predicted')
+ame = dict(zip(df.name, df.test_aue))
+print(ame)
+names = list(ame.keys())
+values = list(ame.values())
+plt.bar(range(len(ame)), values, align='center', tick_label=names)
+plt.xticks(rotation=90)
+ax = plt.gca()
+ax.set_ylim([0, 100])
+plt.xlabel("Regression Model")
+plt.ylabel("Absolute Mean Error")
+plt.tight_layout()
+plt.gca().set_aspect(16/100)
+plt.savefig("ame.png")
 plt.show()
