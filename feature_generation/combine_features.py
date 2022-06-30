@@ -11,8 +11,9 @@ os.mkdir(folder + "features/")
 
 folder = PATHNAME + folder + "/"
 df = pd.read_csv(folder + "rac_features.csv")
-df = pd.merge(df, pd.read_csv(folder + "mofid_pubchem_features.csv"), on="name", how="outer", suffixes=("", "_mofidpubchem"))
-df = pd.merge(df, pd.read_csv(folder + "linker_features.csv"), on="name", how="outer", suffixes=("", "_linker"))
-df = pd.merge(df, pd.read_csv(folder + "node_features.csv"), on="name", how="outer", suffixes=("", "_node"))
+df.merge(pd.read_csv(folder + "mofid_pubchem_features.csv"), on="name", how="outer", suffixes=("", "_mofidpubchem"))
+df.merge(pd.read_csv(folder + "linker_features.csv"), on="name", how="outer", suffixes=("", "_linker"))
+df.merge(pd.read_csv(folder + "node_features.csv"), on="name", how="outer", suffixes=("", "_node"))
+df.merge(pd.read_csv(folder + "homology_features.csv"), on="name", how="outer", suffixes=("", "_homology"))
 
 df.to_csv(folder + "all_features.csv", index=False)

@@ -1,7 +1,9 @@
 data/
 Output/
-packages/
+modules/
 kulik_model/
 core_database/
+feature_sets/
 **/.DS_Store
 __pycache__/
+

@@ -14,6 +14,8 @@ def main(folder):
     if not os.path.exists(sbus):
         return
 
+    element_features = pd.read_csv(os.path.join(os.path.dirname(__file__), 'element_features.csv'))
+
     featurization_list = []
     iter = 0
     for filename in os.listdir(sbus):
@@ -35,6 +37,9 @@ def main(folder):
                 orbitals = metal.atomic_orbitals
                 for o in orbitals:
                     featurization['metal_' + o + '_energy'] = orbitals[o]
+
+                for feat in element_features.columns:
+                    featurization[feat] = element_features.loc[element_features["Sym"] == metal_symbol, feat].values[0]
                 
                 symbols = {"oxygen": "O", "nitrogen": "N", "carbon": "C"}
 
