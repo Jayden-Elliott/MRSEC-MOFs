@@ -6,4 +6,5 @@ core_database/
 feature_sets/
 **/.DS_Store
 __pycache__/
+predictions/
 

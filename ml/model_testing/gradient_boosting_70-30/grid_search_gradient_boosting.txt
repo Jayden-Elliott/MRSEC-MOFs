@@ -1,0 +1,1 @@
+name,best_params,best_scoregradient_boosting,{'learning_rate': 0.05, 'max_depth': 8, 'max_features': None, 'min_samples_leaf': 50, 'n_estimators': 200},0.4650673661510294
